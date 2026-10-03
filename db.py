@@ -3,9 +3,7 @@ from pathlib import Path
 
 # DB_PATH = Path(__file__).resolve().parent / "data" / "officehours.db"
 import os
-DB_PATH = Path(os.environ.get("DATABASE_PATH", "data/officehours.db"))import os
 DB_PATH = Path(os.environ.get("DATABASE_PATH", "data/officehours.db"))
-
 
 def get_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
