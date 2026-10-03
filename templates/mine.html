@@ -18,9 +18,13 @@
       {% endfor %}
     </ul>
   {% endif %}
-  <p class="help">
+  <!-- <p class="help">
     Device handoff:
     <a href="{{ url_for('mine', sid=sid) }}">open my bookings on this browser</a>
-  </p>
+  </p> -->
+  <form method="post" action="{{ url_for('create_handoff') }}" class="help">
+  Need this on another device?
+  <button type="submit">Get a one-time handoff link</button>
+</form>
 </section>
 {% endblock %}

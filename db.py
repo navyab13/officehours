@@ -42,6 +42,12 @@ def init_db():
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS handoffs (
+            code TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            expires_at INTEGER NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS sessions (
             token TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id),

@@ -1,5 +1,6 @@
 import os
 import secrets
+import time
 from functools import wraps
 
 from flask import Flask, abort, flash, g, redirect, render_template, request, url_for
@@ -34,7 +35,7 @@ def login_required(fn):
 def load_user():
     init_db()
     seed()
-    token = request.args.get("sid") or request.cookies.get("hold_session")
+    token = request.cookies.get("hold_session")
     g.user = None
     g.session_token = None
     if not token:
@@ -260,8 +261,7 @@ def mine():
         (current_user()["id"],),
     ).fetchall()
     conn.close()
-    return render_template("mine.html", bookings=bookings, sid=g.session_token)
-
+    return render_template("mine.html", bookings=bookings)
 
 @app.get("/bookings/<int:booking_id>")
 @login_required
@@ -343,6 +343,42 @@ def transfer_booking(booking_id):
     flash("Transferred.")
     return redirect(url_for("mine"))
 
+@app.post("/handoff")
+@login_required
+def create_handoff():
+    code = secrets.token_urlsafe(24)
+    conn = get_db()
+    conn.execute(
+        "INSERT INTO handoffs (code, user_id, expires_at) VALUES (?, ?, ?)",
+        (code, current_user()["id"], int(time.time()) + 120),
+    )
+    conn.commit()
+    conn.close()
+    return render_template("handoff_created.html",
+        link=url_for("handoff_landing", code=code, _external=True))
+
+
+@app.get("/handoff/<code>")
+def handoff_landing(code):
+    return render_template("handoff.html", code=code)
+
+
+@app.post("/handoff/<code>")
+def handoff_redeem(code):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT user_id FROM handoffs WHERE code = ? AND expires_at >= ?",
+        (code, int(time.time())),
+    ).fetchone()
+    if row:
+        conn.execute("DELETE FROM handoffs WHERE code = ?", (code,))
+        conn.commit()
+    conn.close()
+    if not row:
+        flash("That handoff link expired or was already used.")
+        return redirect(url_for("login"))
+    g.session_token = create_session(row["user_id"])
+    return redirect(url_for("mine"))
 
 @app.errorhandler(403)
 def forbidden(_e):

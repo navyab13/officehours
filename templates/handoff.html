@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Sign in on this device{% endblock %}
+{% block body %}
+<section class="narrow">
+  <h1>Continue on this device?</h1>
+  <form method="post" action="{{ url_for('handoff_redeem', code=code) }}">
+    <button type="submit">Sign in here</button>
+  </form>
+</section>
+{% endblock %}
